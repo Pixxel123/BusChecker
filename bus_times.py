@@ -23,7 +23,7 @@ def get_buses():
     for buses in bus_services['departures']['R9']:
         try:
             bus = SimpleNamespace(  # initialises bus namespace
-                    bus_eta = buses['expected_departure_time'])
+                    bus_eta = buses['best_departure_estimate'])  # aimed or expected departure time, whichever is available. Live data (expected) is taken as the best if both are available
         except KeyError:
             bus = SimpleNamespace(
                     bus_status = 'Test except')
