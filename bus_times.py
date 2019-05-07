@@ -45,4 +45,9 @@ time_now = datetime.now().strftime('%H:%M')
 time_now_timeobject = datetime.strptime(time_now, '%H:%M')
 time_end_timeobject = datetime.strptime(time_end, '%H:%M')
 time_difference = time_end_timeobject - time_now_timeobject
-print('Next bus: ' + str(int(time_difference.total_seconds()/60)) + ' mins')
+time_difference_minutes = int(time_difference.total_seconds()/60)
+
+if  time_difference_minutes <= 1:
+    print('Next bus: due')
+else:
+    print('Next bus: ' + str(time_difference_minutes) + ' mins')
