@@ -12,7 +12,12 @@ def url_parameters():
     response.raise_for_status()
     return full_data
 
-
+def get_location():
+    bus_location = url_parameters()
+    bus_name = SimpleNamespace(
+            bus_stop_name = bus_location['name'])
+    return bus_name.__dict__
+    
 def get_buses():
     bus_services = url_parameters()
     for buses in bus_services['departures']['R9']:
@@ -25,6 +30,10 @@ def get_buses():
         return bus.__dict__
 
 bus_info = get_buses()
+
+bus_location_info = get_location()
+
+print(bus_location_info)
 
 print(bus_info)
 
