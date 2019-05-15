@@ -40,7 +40,7 @@ def get_services():
         if time_difference_minutes < 1:  # if less than a minute
             bus_service_departures.append(str('due'))  # due message for buses almost arriving
         else:
-            bus_service_departures.append(f'{time_difference_minutes} mins')  # minutes to arrival
+            bus_service_departures.append(f"{time_difference_minutes} min{'s' if time_difference_minutes > 1 else ''}")
     return bus_service_departures  # return list of departures
 
 
