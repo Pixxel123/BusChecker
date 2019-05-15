@@ -1,53 +1,79 @@
+from flask import Flask
+from flask import render_template
+from flask import request
 import requests
 from datetime import datetime
-from pprint import pprint
-from types import SimpleNamespace
 from transport_api_keys import app_id, app_key
+
+app = Flask(__name__)
 
 
 def url_parameters():
-    bus_url = f"https://transportapi.com/v3/uk/bus/stop/490001220D/live.json?app_id={app_id}&app_key={app_key}&group=route&nextbuses=no"
+    atocode = request.args.get('atocode')
+    route_to_search = request.args.get('route')
+    bus_url = f"https://transportapi.com/v3/uk/bus/stop/{atocode}/live.json?app_id={app_id}&app_key={app_key}&group=route&nextbuses=no"
     response = requests.get(bus_url)
     full_data = response.json()
     response.raise_for_status()
-    return full_data
+    return full_data, route_to_search
+
 
 def get_location():
-    bus_location = url_parameters()
-    bus_name = SimpleNamespace(
-            bus_stop_name = bus_location['name'])
-    return bus_name.__dict__
-    
-def get_buses():
-    bus_services = url_parameters()
-    for buses in bus_services['departures']['R9']:
-        try:
-            bus = SimpleNamespace(  # initialises bus namespace
-                    bus_eta = buses['best_departure_estimate'])  # aimed or expected departure time, whichever is available. Live data (expected) is taken as the best if both are available
-        except KeyError:
-            bus = SimpleNamespace(
-                    bus_status = 'Test except')
-        return bus.__dict__
+    bus_location = url_parameters()[0]
+    bus_info = []
+    bus_stop = bus_location['name']
+    bus_info.append(bus_stop)
+    return bus_info
 
-bus_info = get_buses()
 
-bus_location_info = get_location()
+def get_services():
+    bus_services = url_parameters()[0]
+    route_to_search = url_parameters()[1]
+    bus_service_departures = []  # initialises empty list of departure times
+    for service in bus_services['departures'][route_to_search]:
+        time_end = service['best_departure_estimate']  # sets departure estimate to variable for time comparison
+        time_now = datetime.now().strftime('%H:%M')  # gets time now in hour and minute format
+        time_end_timeobject = datetime.strptime(time_end, '%H:%M')
+        time_now_timeobject = datetime.strptime(time_now, '%H:%M')  # creates timeobject for end time to allow comparitive operations
+        time_difference = time_end_timeobject - time_now_timeobject  # time difference is TIME_END - TIME_nOW
+        time_difference_minutes = int(time_difference.total_seconds() / 60)  # converts time difference to minutes
+        if time_difference_minutes < 1:  # if less than a minute
+            bus_service_departures.append(str('due'))  # due message for buses almost arriving
+        else:
+            bus_service_departures.append(f'{time_difference_minutes} mins')  # minutes to arrival
+    return bus_service_departures  # return list of departures
 
-print(bus_location_info)
 
-print(bus_info)
+def shortenend_services():  # function to only grab the next service and after, instead of all
+    service_departures = get_services()  # sets bus_service_departures to variable
+    first_services = service_departures[:2]  # gets 0 and 1 values from bus_service_departures
+    return first_services  # returns services
 
-print(bus_info.get('bus_eta'))
 
-time_end = bus_info.get('bus_eta')
-time_now = datetime.now().strftime('%H:%M')
+def location_info():
+    bus_location_info = get_location()[0]
+    return bus_location_info
 
-time_now_timeobject = datetime.strptime(time_now, '%H:%M')
-time_end_timeobject = datetime.strptime(time_end, '%H:%M')
-time_difference = time_end_timeobject - time_now_timeobject
-time_difference_minutes = int(time_difference.total_seconds()/60)
 
-if  time_difference_minutes <= 1:
-    print('Next bus: due')
-else:
-    print('Next bus: ' + str(time_difference_minutes) + ' mins')
+def formatted_bus_times():
+    formatted_times = ', '.join(shortenend_services())
+    return formatted_times
+
+
+@app.route('/')
+@app.route('/home')
+def home_page():
+    string = 'Hello World! Flask is running!'
+    return string
+
+
+@app.route("/getbus", methods=["GET"])
+def main_page():
+    for item in url_parameters():
+        get_location()
+        get_services()
+    return render_template('bus_page.html', bus_info=location_info(), formatted_times=formatted_bus_times())
+
+
+if __name__ == '__main__':
+    app.run()
