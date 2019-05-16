@@ -15,15 +15,19 @@ def url_parameters():
     response = requests.get(bus_url)
     full_data = response.json()
     response.raise_for_status()
-    return full_data, route_to_search
+    return full_data, route_to_search  # url_parameters()[0] = full_data, url_parameters()[1] = route_to_search
 
 
 def get_location():
     bus_location = url_parameters()[0]
-    bus_info = []
-    bus_stop = bus_location['name']
-    bus_info.append(bus_stop)
-    return bus_info
+    route_to_search = url_parameters()[1]
+    bus_info = []  # initialises empty list
+    bus_stop = bus_location['stop_name']  # gets bus stop name
+    bus_line = bus_location['departures'][route_to_search][0]['line']  # finds route name in first instance in json
+    bus_info.extend((bus_line, bus_stop))  # extend instead of append allows adding two values to list
+    bus_route_name = bus_info[0]  # first value in list
+    bus_stop_name = bus_info[1]  # second value in list
+    return bus_route_name, bus_stop_name
 
 
 def get_services():
@@ -40,23 +44,9 @@ def get_services():
         if time_difference_minutes < 1:  # if less than a minute
             bus_service_departures.append(str('due'))  # due message for buses almost arriving
         else:
-            bus_service_departures.append(f"{time_difference_minutes} min{'s' if time_difference_minutes > 1 else ''}")
-    return bus_service_departures  # return list of departures
-
-
-def shortenend_services():  # function to only grab the next service and after, instead of all
-    service_departures = get_services()  # sets bus_service_departures to variable
-    first_services = service_departures[:2]  # gets 0 and 1 values from bus_service_departures
-    return first_services  # returns services
-
-
-def location_info():
-    bus_location_info = get_location()[0]
-    return bus_location_info
-
-
-def formatted_bus_times():
-    formatted_times = ', '.join(shortenend_services())
+            bus_service_departures.append(f"{time_difference_minutes} min{'s' if time_difference_minutes > 1 else ''}")  # mins if more than 1 minute, mins if greater
+        first_services = bus_service_departures[:2]  # gets 0 and 1 values from bus_service_departures to only show the next and after, instead of all
+        formatted_times = ', '.join(first_services)  # adds commas between each time
     return formatted_times
 
 
@@ -72,7 +62,7 @@ def main_page():
     for item in url_parameters():
         get_location()
         get_services()
-    return render_template('bus_page.html', bus_info=location_info(), formatted_times=formatted_bus_times())
+    return render_template('bus_page.html', bus_name=get_location()[0], bus_stop_info=get_location()[1], formatted_times=get_services())
 
 
 if __name__ == '__main__':
