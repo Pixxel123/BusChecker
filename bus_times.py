@@ -8,19 +8,19 @@ from transport_api_keys import app_id, app_key
 app = Flask(__name__)
 
 
-def url_parameters():
+def bus_url_parameters():
     atocode = request.args.get('atocode')
     route_to_search = request.args.get('route')
     bus_url = f"https://transportapi.com/v3/uk/bus/stop/{atocode}/live.json?app_id={app_id}&app_key={app_key}&group=route&nextbuses=no"
     response = requests.get(bus_url)
     full_data = response.json()
     response.raise_for_status()
-    return full_data, route_to_search  # url_parameters()[0] = full_data, url_parameters()[1] = route_to_search
+    return full_data, route_to_search  # bus_url_parameters()[0] = full_data, bus_url_parameters()[1] = route_to_search
 
 
-def get_location():
-    bus_location = url_parameters()[0]
-    route_to_search = url_parameters()[1]
+def bus_get_location():
+    bus_location = bus_url_parameters()[0]
+    route_to_search = bus_url_parameters()[1]
     bus_info = []  # initialises empty list
     bus_stop = bus_location['stop_name']  # gets bus stop name
     bus_line = bus_location['departures'][route_to_search][0]['line']  # finds route name in first instance in json
@@ -32,9 +32,9 @@ def get_location():
     return bus_route_name, bus_stop_name, bus_destination
 
 
-def get_services():
-    bus_services = url_parameters()[0]
-    route_to_search = url_parameters()[1]
+def bus_get_services():
+    bus_services = bus_url_parameters()[0]
+    route_to_search = bus_url_parameters()[1]
     bus_service_departures = []  # initialises empty list of departure times
     for service in bus_services['departures'][route_to_search]:
         time_end = service['best_departure_estimate']  # sets departure estimate to variable for time comparison
@@ -61,10 +61,10 @@ def home_page():
 
 @app.route("/getbus", methods=["GET"])
 def main_page():
-    for item in url_parameters():
-        get_location()
-        get_services()
-    return render_template('bus_page.html', bus_name=get_location()[0], bus_stop_info=get_location()[1], bus_direction=get_location()[2], formatted_times=get_services())
+    for item in bus_url_parameters():
+        bus_get_location()
+        bus_get_services()
+    return render_template('bus_page.html', bus_name=bus_get_location()[0], bus_stop_info=bus_get_location()[1], bus_direction=bus_get_location()[2], formatted_times=bus_get_services())
 
 
 if __name__ == '__main__':
