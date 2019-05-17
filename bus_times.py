@@ -24,10 +24,12 @@ def get_location():
     bus_info = []  # initialises empty list
     bus_stop = bus_location['stop_name']  # gets bus stop name
     bus_line = bus_location['departures'][route_to_search][0]['line']  # finds route name in first instance in json
-    bus_info.extend((bus_line, bus_stop))  # extend instead of append allows adding two values to list
+    bus_destination = bus_location['departures'][route_to_search][0]['direction']
+    bus_info.extend((bus_line, bus_stop, bus_destination))  # extend instead of append allows adding two values to list
     bus_route_name = bus_info[0]  # first value in list
     bus_stop_name = bus_info[1]  # second value in list
-    return bus_route_name, bus_stop_name
+    bus_destination = bus_info[2]  # third value in list
+    return bus_route_name, bus_stop_name, bus_destination
 
 
 def get_services():
@@ -62,7 +64,7 @@ def main_page():
     for item in url_parameters():
         get_location()
         get_services()
-    return render_template('bus_page.html', bus_name=get_location()[0], bus_stop_info=get_location()[1], formatted_times=get_services())
+    return render_template('bus_page.html', bus_name=get_location()[0], bus_stop_info=get_location()[1], bus_direction=get_location()[2], formatted_times=get_services())
 
 
 if __name__ == '__main__':
