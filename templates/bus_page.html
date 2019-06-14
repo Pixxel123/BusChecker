@@ -2,8 +2,21 @@
 <html>
 <head>
 	<title></title>
+	<style>
+		p + ul {
+    		margin-top: -10px;
+		}
+	</style>
 </head>
 <body>
-	<div class="bus_info"><p>{{ bus_name }} ({{ bus_stop_info }}) to {{ bus_direction }} -> <span>{{ formatted_times }}</span></p></div>
+	<!-- <div class="bus_info"><p>{{ bus_name }} ({{ bus_stop_info }}) -> <span>{{ formatted_times }}</span></p></div> -->
+	<div class="stop_name"><p>{{ bus_stop_name }}</p></div>
+	<div class="bus_services">
+		<ul>
+		{% for route in bus_route_info %}
+			<li>{{ route }}</li>
+		{% endfor %}
+		</ul>
+	</div>
 </body>
 </html>
